@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#1f2937">
+  <!-- 読み込めるリソースを限定（XSS・改ざん対策）。API_BASE を変えたら connect-src も変更すること -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: https://api.maptiler.com https://unpkg.com; connect-src 'self' https://slot-plan-api.asudoko.workers.dev; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="description" content="パチンコ・パチスロで打つホールを日付ごとに共有できる地図">
+  <title>Asudoko</title>
+  <!-- integrity: CDN側で改ざんされたファイルは読み込まない（SRI） -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1>Asudoko</h1>
+      <p>明日行くホールをみんなで共有</p>
+    </div>
+    <button id="add" class="primary add-btn" type="button">＋ 予定を追加</button>
+  </header>
+
+  <main>
+    <section class="toolbar" aria-label="表示条件">
+      <div class="date-nav">
+        <button id="prev" type="button" aria-label="前の日">‹</button>
+        <label class="date-label">
+          <span id="date-text"></span>
+          <input id="date" type="date" aria-label="日付">
+        </label>
+        <button id="next" type="button" aria-label="次の日">›</button>
+      </div>
+      <div class="chips">
+        <button id="today" type="button" class="chip">今日</button>
+        <button id="tomorrow" type="button" class="chip">明日</button>
+      </div>
+      <select id="pref" aria-label="都道府県で絞り込み"><option value="">全国</option></select>
+      <button id="share" type="button" class="ghost">共有</button>
+      <span id="count" class="count"></span>
+    </section>
+
+    <div class="layout">
+      <div id="map" aria-label="地図"></div>
+      <aside>
+        <h2 id="list-title"></h2>
+        <div id="plans" aria-live="polite"></div>
+      </aside>
+    </div>
+  </main>
+
+  <dialog id="dialog">
+    <form id="plan-form" novalidate>
+      <h2>打つ予定を追加</h2>
+      <label>日付<input id="plan-date" type="date" required></label>
+
+      <div class="field">
+        <div class="field-head">
+          <span>ホール</span>
+          <button id="near" type="button" class="link">📍 現在地の近くから探す</button>
+        </div>
+        <input id="hall-search" autocomplete="off" placeholder="店舗名・地名で検索（例：マルハン 新宿）">
+        <div id="hall-results" role="listbox"></div>
+        <div id="selected-hall" hidden></div>
+      </div>
+
+      <label>狙い機種・台<input id="machine" maxlength="40" placeholder="例：北斗の拳、ジャグラー島"></label>
+      <label>名前<input id="nickname" maxlength="30" placeholder="例：Nut（空欄なら匿名）"></label>
+      <label>コメント<textarea id="comment" maxlength="100" rows="3" placeholder="例：朝イチから並びます"></textarea>
+        <small class="counter"><span id="comment-count">0</span>/100</small></label>
+      <label>削除キー（必須・4文字以上）
+        <input id="delete-pin" type="password" minlength="4" maxlength="32" autocomplete="off" required placeholder="例：1234">
+        <small class="hint">予定を消すときに使います。この端末なら入力なしで削除でき、別のスマホやPCからはこのキーで削除できます。他のサービスのパスワードは使わないでください。</small></label>
+      <div id="turnstile" hidden></div>
+      <p class="notice">⚠ 予定は誰でも見られます。本名や個人が特定できる情報は書かないでください。予定は数日後に自動で削除されます。</p>
+      <div class="dialog-actions">
+        <button type="button" id="cancel">キャンセル</button>
+        <button id="submit" class="primary">追加する</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="del-dialog">
+    <form id="del-form" novalidate>
+      <h2>予定を削除</h2>
+      <p id="del-target" class="del-target"></p>
+      <label>削除キー<input id="del-pin" type="password" maxlength="32" autocomplete="off" required></label>
+      <p id="del-error" class="del-error" hidden></p>
+      <div class="dialog-actions">
+        <button type="button" id="del-cancel">キャンセル</button>
+        <button id="del-submit" class="primary">削除する</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

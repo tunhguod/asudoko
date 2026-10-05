@@ -1,0 +1,15 @@
+# Cloudflare / wrangler のローカルキャッシュ（アカウント情報を含む）
+.wrangler/
+**/.wrangler/
+.dev.vars
+.env*
+node_modules/
+
+# ホールマスタの元データ（公開しない。D1とWorkerに投入済み）
+*.csv
+halls.sql
+# 検索用ホールデータ（Workerのデプロイ時にローカルから組み込む）
+worker/halls.json
+
+# 作業用バックアップ
+_backup_*/

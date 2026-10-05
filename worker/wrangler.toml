@@ -1,0 +1,38 @@
+name = "slot-plan-api"
+main = "index.js"
+compatibility_date = "2026-10-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "slot-plan"
+database_id = "68e36829-a14c-45f8-a449-7a0d6cb916aa"
+
+[vars]
+# GitHub Pages のURL（末尾スラッシュなし）。カンマ区切りで複数可。
+# 例: "https://tunhguod.github.io"   空にすると全オリジンを許可（開発用）
+ALLOWED_ORIGINS = "https://tunhguod.github.io"
+# 予定を残す日数（これより古い予定は毎日自動削除）
+RETENTION_DAYS = "3"
+
+# 過去の予定の自動削除（毎日 19:00 UTC = 翌4:00 JST）
+[triggers]
+crons = ["0 19 * * *"]
+
+# IPごとの回数制限（Workers Rate Limiting）。period は 10 か 60 秒のみ。
+[[ratelimits]]
+name = "RL_WRITE"        # 投稿・削除
+namespace_id = "1001"
+  [ratelimits.simple]
+  limit = 6
+  period = 60
+
+[[ratelimits]]
+name = "RL_READ"         # 閲覧・ホール検索
+namespace_id = "1002"
+  [ratelimits.simple]
+  limit = 120
+  period = 60
+
+# シークレット（wrangler secret put で設定。ここには書かない）
+#   PIN_PEPPER       : 削除キーのハッシュに混ぜる秘密の文字列（最初のデプロイ前に設定し、以後変更しない）
+#   TURNSTILE_SECRET : Cloudflare Turnstile のシークレットキー（設定すると投稿時のボット判定が有効になる）
